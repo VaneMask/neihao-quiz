@@ -53,6 +53,13 @@
   .disclaimer{font-size:12px;color:var(--gray);line-height:1.7;margin:8px 0 22px;padding-top:14px;border-top:1px solid var(--line)}
   .row{display:flex;gap:10px}
   .row .btn{flex:1}
+  .dim{margin-bottom:14px}
+  .dim:last-child{margin-bottom:0}
+  .dim .top{display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px;color:var(--ink)}
+  .dim .top span{color:var(--gray);font-size:13px}
+  .dim .track{height:9px;background:var(--line);border-radius:99px;overflow:hidden}
+  .dim .fill{height:100%;background:#c9c3b4;border-radius:99px;transition:width .4s ease}
+  .dim.top1 .fill{background:var(--ink)}
   @media (max-width:360px){#cover h1{font-size:34px}.qtext{font-size:20px}.rname{font-size:36px}}
 </style>
 </head>
@@ -78,6 +85,8 @@
   <h1 class="rname"><em id="rname"></em></h1>
   <p class="rsub" id="rsub"></p>
   <p class="bar2" id="rlevel"></p>
+
+  <div class="card"><h3>你的四维分布</h3><div id="dims"></div></div>
 
   <div class="card"><h3>听起来像不像你</h3><ul id="scenes"></ul></div>
   <div class="card"><h3>它为什么会停不下来</h3><p id="mechanism"></p></div>
@@ -125,7 +134,11 @@ var BASE = [
   ['A','别人一句没头没尾的话，我会在心里放很久。'],
   ['B','一旦某件事没有明确答案，我就没法安心做别的。'],
   ['C','有人比我做得好，我会替自己难堪，即使那件事跟我无关。'],
-  ['D','我很难接受「不知道他为什么这样」，会一直想。']
+  ['D','我很难接受「不知道他为什么这样」，会一直想。'],
+  ['A','手机相册翻到旧照片，会顺着那段回忆一路想下去，停不下来。'],
+  ['B','出门前会在脑子里把整个流程走一遍，包括可能出的岔子。'],
+  ['C','发完朋友圈会忍不住看别人的，比较谁的生活更像样。'],
+  ['D','对方回复变短了，我会回想自己上一句是不是说错了什么。']
 ];
 
 var TYPES = {
@@ -277,7 +290,21 @@ function finish(){
 
   $('rname').textContent = t.name;
   $('rsub').textContent = t.sub;
-  $('rlevel').textContent = '内耗强度：' + lv + '（' + ranked[0].v + ' / 20）';
+  var MAXP = 24;
+  $('rlevel').textContent = '内耗强度：' + lv + '（' + ranked[0].v + ' / ' + MAXP + '）';
+
+  // 四维分布：让结果看起来是「你的」，不是模板
+  var dimNames = {A:'回放', B:'预演', C:'对比', D:'归因'};
+  var dimsHTML = ['A','B','C','D'].map(function(k){
+    var pct = Math.round(score[k] / MAXP * 100);
+    return '<div class="dim' + (k === main ? ' top1' : '') + '">' +
+             '<div class="top"><div>' + dimNames[k] + ' · ' + TYPES[k].name + '</div>' +
+             '<span>' + score[k] + ' / ' + MAXP + '</span></div>' +
+             '<div class="track"><div class="fill" style="width:' + pct + '%"></div></div>' +
+           '</div>';
+  }).join('');
+  $('dims').innerHTML = dimsHTML;
+
   $('scenes').innerHTML = t.scenes.map(function(s){ return '<li>' + s + '</li>'; }).join('');
   $('mechanism').textContent = t.mechanism;
   $('strength').textContent = t.strength;
@@ -301,33 +328,84 @@ function finish(){
 function share(){
   if (!lastResult) return;
   var t = TYPES[lastResult.main];
-  var W = 1080, H = 1500;
+  var W = 1080, H = 1920;
   var c = document.createElement('canvas');
   c.width = W; c.height = H;
   var g = c.getContext('2d');
   g.fillStyle = '#f7f3e8'; g.fillRect(0, 0, W, H);
-  g.fillStyle = '#ffd60a'; g.fillRect(0, 300, W, 22);
+
   g.fillStyle = '#8a8780'; g.font = '28px sans-serif';
-  g.fillText('内耗类型测试 · 我的结果', 80, 120);
-  g.fillStyle = '#14161a'; g.font = 'bold 96px sans-serif';
-  g.fillText(t.name, 80, 240);
-  g.font = '34px sans-serif'; g.fillStyle = '#4a4740';
-  var y = wrap(g, t.sub, 80, 390, W - 160, 50);
-  g.font = '26px sans-serif'; g.fillStyle = '#8a8780';
-  g.fillText('内耗强度：' + lastResult.level, 80, y + 20);
+  g.fillText('内耗类型测试 · 我的结果', 80, 110);
+
+  g.fillStyle = '#14161a'; g.font = 'bold 92px sans-serif';
+  g.fillText(t.name, 80, 230);
+  var nw = g.measureText(t.name).width;
+  g.fillStyle = '#ffd60a'; g.fillRect(80, 252, nw, 18);
+
+  g.fillStyle = '#4a4740'; g.font = '34px sans-serif';
+  var y = wrap(g, t.sub, 80, 330, W - 160, 50);
+
+  g.fillStyle = '#8a8780'; g.font = '26px sans-serif';
+  g.fillText('内耗强度：' + lastResult.level, 80, y + 16);
+
+  /* 雷达图 */
+  var cx = 540, cy = 700, R = 170;
+  var keys = ['A','B','C','D'];
+  var labels = ['回放','预演','对比','归因'];
+  var ang = [-Math.PI/2, 0, Math.PI/2, Math.PI];
+  function pt(i, r){ return [cx + Math.cos(ang[i]) * r, cy + Math.sin(ang[i]) * r]; }
+
+  g.strokeStyle = '#e6e0d0'; g.lineWidth = 2;
+  [0.5, 1].forEach(function(k){
+    g.beginPath();
+    for (var i = 0; i < 4; i++){
+      var p = pt(i, R * k);
+      if (i === 0) g.moveTo(p[0], p[1]); else g.lineTo(p[0], p[1]);
+    }
+    g.closePath(); g.stroke();
+  });
+  g.strokeStyle = '#e6e0d0';
+  for (var i = 0; i < 4; i++){
+    var e = pt(i, R);
+    g.beginPath(); g.moveTo(cx, cy); g.lineTo(e[0], e[1]); g.stroke();
+  }
+
+  g.beginPath();
+  keys.forEach(function(k, i){
+    var p = pt(i, R * (lastResult.score[k] / 24));
+    if (i === 0) g.moveTo(p[0], p[1]); else g.lineTo(p[0], p[1]);
+  });
+  g.closePath();
+  g.fillStyle = 'rgba(20,22,26,0.85)'; g.fill();
+  g.strokeStyle = '#14161a'; g.lineWidth = 3; g.stroke();
+
+  g.font = 'bold 30px sans-serif'; g.fillStyle = '#14161a';
+  keys.forEach(function(k, i){
+    var p = pt(i, R + 46);
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(labels[i], p[0], p[1]);
+  });
+  g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+
+  /* 场景 */
   g.fillStyle = '#14161a'; g.font = 'bold 38px sans-serif';
-  g.fillText('听起来像不像你', 80, y + 100);
+  g.fillText('听起来像不像你', 80, 990);
   g.fillStyle = '#4a4740'; g.font = '30px sans-serif';
-  var yy = y + 160;
-  t.scenes.slice(0, 3).forEach(function(s){ yy = wrap(g, '· ' + s, 80, yy, W - 160, 46) + 12; });
-  g.fillStyle = '#14161a'; g.font = 'bold 38px sans-serif';
-  g.fillText('今天就能做的一步', 80, yy + 60);
-  g.fillStyle = '#4a4740'; g.font = '30px sans-serif';
-  yy = wrap(g, t.action, 80, yy + 120, W - 160, 46);
+  y = 1050;
+  t.scenes.slice(0, 4).forEach(function(s){ y = wrap(g, '· ' + s, 80, y, W - 160, 46) + 10; });
+
+  /* 动作 */
+  g.fillStyle = '#ffd60a'; g.fillRect(70, y + 40, W - 140, 190);
+  g.fillStyle = '#6b5b00'; g.font = 'bold 28px sans-serif';
+  g.fillText('今天就能做的一步', 100, y + 90);
+  g.fillStyle = '#14161a'; g.font = '30px sans-serif';
+  wrap(g, t.action, 100, y + 140, W - 200, 46);
+
   g.fillStyle = '#8a8780'; g.font = '24px sans-serif';
   g.fillText('自我觉察工具，不是诊断', 80, H - 60);
+
   var a = document.createElement('a');
-  a.download = '内耗类型-' + t.name + '.png';
+  a.download = '内耗类型报告-' + t.name + '.png';
   a.href = c.toDataURL('image/png');
   a.click();
 }
