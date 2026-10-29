@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f7f3e8">
+<title>内耗类型测试 · 你是哪一种</title>
+<style>
+  :root{
+    --ink:#14161a; --cream:#f7f3e8; --yellow:#ffd60a; --gray:#8a8780; --line:#e6e0d0;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;background:var(--cream);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+  body{min-height:100vh;display:flex;flex-direction:column}
+  .wrap{flex:1;display:flex;flex-direction:column;padding:24px 22px calc(24px + env(safe-area-inset-bottom));max-width:520px;margin:0 auto;width:100%}
+  .hide{display:none!important}
+
+  /* 封面 */
+  #cover{justify-content:center;text-align:left}
+  #cover .kicker{font-size:13px;letter-spacing:.22em;color:var(--gray);margin-bottom:18px}
+  #cover h1{font-size:40px;line-height:1.18;margin:0 0 8px;font-weight:800;letter-spacing:-.5px}
+  #cover h1 em{font-style:normal;background:linear-gradient(transparent 62%, var(--yellow) 62%)}
+  #cover .sub{font-size:15px;color:#4a4740;line-height:1.7;margin:18px 0 28px}
+  #cover .meta{font-size:13px;color:var(--gray);margin-bottom:22px}
+  .btn{display:block;width:100%;border:none;border-radius:14px;padding:17px;font-size:17px;font-weight:700;
+    background:var(--ink);color:var(--cream);cursor:pointer}
+  .btn:active{transform:scale(.99)}
+  .btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+
+  /* 答题 */
+  #quiz{justify-content:flex-start}
+  .bar{height:5px;background:var(--line);border-radius:99px;overflow:hidden;margin:4px 0 26px}
+  .bar i{display:block;height:100%;background:var(--ink);width:0;transition:width .28s ease}
+  .qno{font-size:13px;color:var(--gray);letter-spacing:.12em;margin-bottom:14px}
+  .qtext{font-size:23px;line-height:1.5;font-weight:700;margin:0 0 26px;letter-spacing:-.2px}
+  .opts{display:flex;flex-direction:column;gap:10px}
+  .opt{border:1.5px solid var(--line);background:#fffdf6;border-radius:14px;padding:16px 16px;
+    font-size:16px;text-align:left;cursor:pointer;color:var(--ink);transition:.12s}
+  .opt:active{background:var(--yellow);border-color:var(--ink)}
+  .opt b{display:block;font-size:16px;margin-bottom:2px}
+  .opt span{font-size:12.5px;color:var(--gray)}
+  .back{margin-top:auto;padding-top:20px;font-size:14px;color:var(--gray);background:none;border:none;cursor:pointer;text-align:left}
+
+  /* 结果 */
+  #result{justify-content:flex-start}
+  .rtype{font-size:13px;letter-spacing:.22em;color:var(--gray);margin-bottom:10px}
+  .rname{font-size:44px;font-weight:800;line-height:1.1;margin:0 0 6px;letter-spacing:-1px}
+  .rname em{font-style:normal;background:linear-gradient(transparent 62%, var(--yellow) 62%)}
+  .rsub{font-size:16px;color:#4a4740;margin:0 0 24px;line-height:1.6}
+  .card{background:#fffdf6;border:1.5px solid var(--line);border-radius:16px;padding:18px;margin-bottom:14px}
+  .card h3{margin:0 0 10px;font-size:14px;letter-spacing:.1em;color:var(--gray);font-weight:600}
+  .card p{margin:0 0 8px;font-size:15.5px;line-height:1.65}
+  .card p:last-child{margin-bottom:0}
+  .card p::before{content:"·";margin-right:8px;color:var(--gray)}
+  .act{background:var(--yellow);border:none}
+  .act h3{color:#6b5b00}
+  .act p::before{content:"→"}
+  .secondary{font-size:14px;color:var(--gray);margin:2px 0 20px}
+  .disclaimer{font-size:12px;color:var(--gray);line-height:1.7;margin:8px 0 22px;padding-top:14px;border-top:1px solid var(--line)}
+  .row{display:flex;gap:10px}
+  .row .btn{flex:1}
+
+  @media (max-width:360px){ #cover h1{font-size:34px} .qtext{font-size:20px} }
+</style>
+</head>
+<body>
+<div class="wrap" id="cover">
+  <div class="kicker">20 题 · 约 3 分钟</div>
+  <h1>你的内耗<br>到底是<em>哪一种</em></h1>
+  <p class="sub">不是"你有多严重"。<br>是你在用哪种方式消耗自己。</p>
+  <div class="meta">4 种类型 · 主型 + 副型 · 一题一句实话</div>
+  <button class="btn" onclick="start()">开始测试</button>
+</div>
+
+<div class="wrap hide" id="quiz">
+  <div class="bar"><i id="prog"></i></div>
+  <div class="qno" id="qno"></div>
+  <h2 class="qtext" id="qtext"></h2>
+  <div class="opts" id="opts"></div>
+  <button class="back" id="back" onclick="prev()">← 上一题</button>
+</div>
+
+<div class="wrap hide" id="result">
+  <div class="rtype">你的主型</div>
+  <h1 class="rname"><em id="rname"></em></h1>
+  <p class="rsub" id="rsub"></p>
+  <div class="secondary" id="rsecond"></div>
+
+  <div class="card"><h3>你可能经常</h3><div id="scenes"></div></div>
+  <div class="card act"><h3>今天就能做的一步</h3><p id="action"></p></div>
+  <div class="card"><h3>别再对自己说</h3><p id="stopword" style="font-size:17px"></p><p id="reply"></p></div>
+
+  <div class="disclaimer">
+    这是一份自我觉察工具，不是诊断，不能替代专业帮助。<br>
+    如果持续两周以上影响睡眠、食欲或工作，请去看医生。
+  </div>
+
+  <div class="row">
+    <button class="btn ghost" onclick="restart()">再测一次</button>
+    <button class="btn" onclick="share()">保存结果卡</button>
+  </div>
+</div>
+
+<script>
+const LIK = [
+  ["完全不像我", 0], ["不太像", 1], ["有一点像", 2], ["比较像", 3], ["非常像我", 4]
+];
+
+/* 四个维度各 5 题，交错排列，避免连续同类让人察觉规律 */
+const ITEMS = [
+  ["A","白天说错一句话，晚上躺下还会重播那个画面。"],
+  ["B","事情还没发生，我已经在脑子里演了几种最坏的结果。"],
+  ["C","看到同龄人进展比我快，我会立刻觉得自己的努力没有意义。"],
+  ["D","别人态度有一点变化，我就会分析是不是自己哪里做错了。"],
+  ["A","会反复回想几个月前的一次尴尬，而且每次都觉得更难堪。"],
+  ["B","要做一件没做过的事，我会先把所有可能出错的地方想一遍。"],
+  ["C","我会下意识算：他做这件事用了多久，我用了多久。"],
+  ["D","我常常想搞清楚“他当时那句话到底是什么意思”。"],
+  ["A","和人聊完天，会回放自己说过的每句话，检查有没有说错。"],
+  ["B","别人说“明天找你聊一下”，我当晚就会睡不好。"],
+  ["C","刷到别人的成果，我会马上反观自己“我是不是浪费了时间”。"],
+  ["D","一段关系里出现冷淡，我会一直找原因，直到找到为止。"],
+  ["A","一件事已经过去了，我还在想“当时要是……就好了”。"],
+  ["B","我会为一个大概率不会发生的风险，提前准备很久。"],
+  ["C","我做一件事的满足感，很大程度取决于别人怎么看。"],
+  ["D","我会反复推演别人的动机，即使对方已经说清楚了。"],
+  ["A","别人一句没头没尾的话，我会在心里放很久。"],
+  ["B","一旦某件事没有明确答案，我就没法安心做别的。"],
+  ["C","有人比我做得好，我会替自己难堪，即使那件事跟我无关。"],
+  ["D","我很难接受“不知道他为什么这样”，会一直想。"]
+];
+
+const TYPES = {
+  A:{ name:"回放机", sub:"昨天那句话，你今天还在想。",
+      scenes:["躺下就开始重播白天的对话","翻出几个月前的尴尬，越想越难堪","聊完天逐句检查自己有没有说错"],
+      action:"给回放设一个时间盒：每天固定 10 分钟“专门想”，其它时间想起来就记一行字，攒到那 10 分钟一起想。",
+      stop:"我怎么还在想这件事。",
+      reply:"想，不代表你没出息。回放是大脑在试图修正，它只是还没找到出口。" },
+  B:{ name:"灾难导演", sub:"事情还没发生，你已经演了十遍最坏。",
+      scenes:["一句话约谈，整晚睡不着","先想尽所有可能出错的地方才敢动","没有明确答案就没法安心做别的"],
+      action:"把最坏结果写下来，然后写一句“如果真发生，我第一步做什么”。预演停不下来，是因为它没有落点。",
+      stop:"我就是想太多。",
+      reply:"你不是想太多，你是在用想象代替准备。想象给不了答案，落点才能。" },
+  C:{ name:"参照系", sub:"别人的进度条，是你的刑具。",
+      scenes:["看到同龄人更快，立刻否定自己","下意识算时差：他用了多久，我用了多久","成果的满足感取决于别人怎么看"],
+      action:"把“他在哪”换成“我比三个月前的自己多会了什么”，只写一条，写完就关掉。",
+      stop:"我这算什么。",
+      reply:"比较之所以疼，是因为你拿自己的幕后，去对别人的高光。" },
+  D:{ name:"显微镜", sub:"你总在分析他为什么那样对我。",
+      scenes:["对方态度一变，先自查是不是自己的错","追着那句暧昧的话想它到底什么意思","关系一冷淡就必须找到原因才罢休"],
+      action:"允许一件事暂时没有解释。写下“我不知道，先这样”，然后去做一件别的事——找解释的冲动一般 20 分钟内会降下去。",
+      stop:"我是不是太敏感。",
+      reply:"你在意关系，才会去读它。敏感不是毛病，是分辨率高——但不需要每张图都放大到像素。" }
+};
+
+const QS = ["A","B","C","D"];
+const OD = {A:0,B:1,C:2,D:3};
+
+let idx = 0, answers = new Array(ITEMS.length).fill(null);
+
+const $ = id => document.getElementById(id);
+const show = id => ["cover","quiz","result"].forEach(x => $(x).classList.toggle("hide", x !== id));
+
+function start(){ idx = 0; answers.fill(null); show("quiz"); render(); }
+function restart(){ show("cover"); }
+
+function render(){
+  const [dim, text] = ITEMS[idx];
+  $("prog").style.width = ((idx) / ITEMS.length * 100) + "%";
+  $("qno").textContent = `第 ${idx+1} / ${ITEMS.length} 题`;
+  $("qtext").textContent = text;
+
+  const box = $("opts");
+  box.innerHTML = "";
+  LIK.forEach(([label, val]) => {
+    const b = document.createElement("button");
+    b.className = "opt";
+    b.innerHTML = `<b>${label}</b>`;
+    if (answers[idx] === val) b.style.background = "#ffd60a", b.style.borderColor = "#14161a";
+    b.onclick = () => pick(val);
+    box.appendChild(b);
+  });
+
+  $("back").style.visibility = idx === 0 ? "hidden" : "visible";
+}
+
+function pick(val){
+  answers[idx] = val;
+  if (idx < ITEMS.length - 1){
+    idx++; render();
+  } else {
+    finish();
+  }
+}
+
+function prev(){ if (idx > 0){ idx--; render(); } }
+
+function finish(){
+  if (answers.some(a => a === null)) { alert("还有题没答"); return; }
+  const score = {A:0,B:0,C:0,D:0};
+  ITEMS.forEach(([dim], i) => score[dim] += answers[i]);
+
+  // 按总分归一，避免某型题目被答得普遍偏高
+  const max = 20; // 每型 5 题 × 4 分
+  const ranked = QS.map(k => ({k, v: score[k]})).sort((a,b) => b.v - a.v);
+  const main = ranked[0].k, second = ranked[1].k;
+  const t = TYPES[main];
+
+  $("rname").textContent = t.name;
+  $("rsub").textContent = t.sub;
+  $("rsecond").textContent = `副型是「${TYPES[second].name}」——${TYPES[second].sub}`;
+  $("scenes").innerHTML = t.scenes.map(s => `<p>${s}</p>`).join("");
+  $("action").textContent = t.action;
+  $("stopword").textContent = `「${t.stop}」`;
+  $("reply").textContent = t.reply;
+
+  window.__result = {main, second, score, name:t.name, sub:t.sub};
+  show("result");
+  window.scrollTo(0,0);
+}
+
+/* 结果卡：用 canvas 画一张 1080×1440 的图，方便存图分享 */
+function share(){
+  const r = window.__result;
+  if (!r) return;
+  const W = 1080, H = 1440;
+  const c = document.createElement("canvas");
+  c.width = W; c.height = H;
+  const g = c.getContext("2d");
+
+  g.fillStyle = "#f7f3e8"; g.fillRect(0,0,W,H);
+  g.fillStyle = "#ffd60a"; g.fillRect(0, 300, W, 24);
+
+  g.fillStyle = "#8a8780"; g.font = "28px sans-serif";
+  g.fillText("内耗类型测试 · 我的结果", 80, 120);
+
+  g.fillStyle = "#14161a"; g.font = "bold 96px sans-serif";
+  g.fillText(r.name, 80, 240);
+
+  g.font = "34px sans-serif"; g.fillStyle = "#4a4740";
+  wrapText(g, r.sub, 80, 400, W - 160, 52);
+
+  g.fillStyle = "#14161a"; g.font = "bold 40px sans-serif";
+  g.fillText("你可能经常", 80, 560);
+
+  g.fillStyle = "#4a4740"; g.font = "30px sans-serif";
+  let y = 620;
+  TYPES[r.main].scenes.forEach(s => { y = wrapText(g, "· " + s, 80, y, W - 160, 46) + 14; });
+
+  g.fillStyle = "#14161a"; g.font = "bold 40px sans-serif";
+  g.fillText("今天就能做的一步", 80, y + 40);
+
+  g.fillStyle = "#4a4740"; g.font = "30px sans-serif";
+  y = wrapText(g, TYPES[r.main].action, 80, y + 100, W - 160, 46);
+
+  g.fillStyle = "#8a8780"; g.font = "24px sans-serif";
+  g.fillText("不是诊断，只用来认识自己", 80, H - 60);
+
+  const a = document.createElement("a");
+  a.download = `内耗类型-${r.name}.png`;
+  a.href = c.toDataURL("image/png");
+  a.click();
+}
+
+function wrapText(g, text, x, y, maxW, lh){
+  let line = "";
+  for (const ch of text){
+    if (g.measureText(line + ch).width > maxW){
+      g.fillText(line, x, y); y += lh; line = ch;
+    } else line += ch;
+  }
+  if (line) { g.fillText(line, x, y); y += lh; }
+  return y;
+}
+</script>
+</body>
+</html>
