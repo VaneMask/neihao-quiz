@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f7f3e8">
+<title>拖延类型测试 · 你不是懒</title>
+<style>
+  :root{--ink:#14161a;--cream:#f7f3e8;--yellow:#ffd60a;--gray:#8a8780;--line:#e6e0d0}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;background:var(--cream);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+  body{min-height:100vh;display:flex;flex-direction:column}
+  .wrap{flex:1;display:flex;flex-direction:column;padding:24px 22px calc(28px + env(safe-area-inset-bottom));max-width:520px;margin:0 auto;width:100%}
+  .hide{display:none!important}
+  #cover{justify-content:center}
+  #cover .kicker{font-size:13px;letter-spacing:.22em;color:var(--gray);margin-bottom:18px}
+  #cover h1{font-size:40px;line-height:1.18;margin:0 0 8px;font-weight:800;letter-spacing:-.5px}
+  #cover h1 em{font-style:normal;background:linear-gradient(transparent 62%, var(--yellow) 62%)}
+  #cover .sub{font-size:15px;color:#4a4740;line-height:1.7;margin:18px 0 26px}
+  #cover .meta{font-size:13px;color:var(--gray);margin-bottom:22px;line-height:1.7}
+  .btn{display:block;width:100%;border:none;border-radius:14px;padding:17px;font-size:17px;font-weight:700;background:var(--ink);color:var(--cream);cursor:pointer}
+  .btn:active{transform:scale(.99)}
+  .btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+
+  .bar{height:5px;background:var(--line);border-radius:99px;overflow:hidden;margin:4px 0 26px}
+  .bar i{display:block;height:100%;background:var(--ink);width:0;transition:width .28s ease}
+  .qno{font-size:13px;color:var(--gray);letter-spacing:.12em;margin-bottom:14px}
+  .qtext{font-size:23px;line-height:1.5;font-weight:700;margin:0 0 26px;letter-spacing:-.2px}
+  .opts{display:flex;flex-direction:column;gap:10px}
+  .opt{border:1.5px solid var(--line);background:#fffdf6;border-radius:14px;padding:16px;font-size:16px;text-align:left;cursor:pointer;color:var(--ink)}
+  .opt:active{background:var(--yellow);border-color:var(--ink)}
+  .opt b{display:block;font-size:16px}
+  .back{margin-top:auto;padding-top:20px;font-size:14px;color:var(--gray);background:none;border:none;cursor:pointer;text-align:left}
+
+  .rtype{font-size:13px;letter-spacing:.22em;color:var(--gray);margin-bottom:10px}
+  .rname{font-size:44px;font-weight:800;line-height:1.1;margin:0 0 6px;letter-spacing:-1px}
+  .rname em{font-style:normal;background:linear-gradient(transparent 62%, var(--yellow) 62%)}
+  .rsub{font-size:16px;color:#4a4740;margin:0 0 6px;line-height:1.6}
+  .bar2{font-size:13px;color:var(--gray);margin:0 0 22px}
+  .card{background:#fffdf6;border:1.5px solid var(--line);border-radius:16px;padding:18px;margin-bottom:14px}
+  .card h3{margin:0 0 10px;font-size:13px;letter-spacing:.12em;color:var(--gray);font-weight:700}
+  .card p{margin:0 0 9px;font-size:15.5px;line-height:1.7}
+  .card p:last-child{margin-bottom:0}
+  .card ul{margin:0;padding-left:18px}
+  .card li{font-size:15.5px;line-height:1.7;margin-bottom:7px}
+  .card li:last-child{margin-bottom:0}
+  .card.hl{background:var(--yellow);border:none}
+  .card.hl h3{color:#6b5b00}
+  .card.good{border-color:#cfe3c4;background:#f4faf0}
+  .quote{font-size:16px;font-weight:700;margin:0 0 8px}
+  .secondary{font-size:14px;color:var(--gray);margin:2px 0 18px;line-height:1.6}
+  .disclaimer{font-size:12px;color:var(--gray);line-height:1.7;margin:8px 0 22px;padding-top:14px;border-top:1px solid var(--line)}
+  .row{display:flex;gap:10px}
+  .row .btn{flex:1}
+  .dim{margin-bottom:14px}
+  .dim:last-child{margin-bottom:0}
+  .dim .top{display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px;color:var(--ink)}
+  .dim .top span{color:var(--gray);font-size:13px}
+  .dim .track{height:9px;background:var(--line);border-radius:99px;overflow:hidden}
+  .dim .fill{height:100%;background:#c9c3b4;border-radius:99px;transition:width .4s ease}
+  .dim.top1 .fill{background:var(--ink)}
+  @media (max-width:360px){#cover h1{font-size:34px}.qtext{font-size:20px}.rname{font-size:36px}}
+</style>
+</head>
+<body>
+<div class="wrap" id="cover">
+  <div class="kicker">24 题 · 约 4 分钟</div>
+  <h1>你不是懒<br>是哪一种<em>拖</em></h1>
+  <p class="sub">拖延不是一种。<br>四种拖法，只有一种靠意志力能解决。</p>
+  <div class="meta">4 种类型 · 主型 + 副型 + 强度 · 每种都给今天能做的</div>
+  <button class="btn" onclick="start()">开始测试</button>
+</div>
+
+<div class="wrap hide" id="quiz">
+  <div class="bar"><i id="prog"></i></div>
+  <div class="qno" id="qno"></div>
+  <h2 class="qtext" id="qtext"></h2>
+  <div class="opts" id="opts"></div>
+  <button class="back" id="back" onclick="prev()">← 上一题</button>
+</div>
+
+<div class="wrap hide" id="result">
+  <div class="rtype">你的主型</div>
+  <h1 class="rname"><em id="rname"></em></h1>
+  <p class="rsub" id="rsub"></p>
+  <p class="bar2" id="rlevel"></p>
+
+  <div class="card hl"><h3>按你现在的程度，先从这一步开始</h3><p id="levelAdvice"></p></div>
+
+  <div class="card"><h3>你的四维分布</h3><div id="dims"></div></div>
+
+  <div class="card"><h3>听起来像不像你</h3><ul id="scenes"></ul></div>
+  <div class="card"><h3>它为什么会停不下来</h3><p id="mechanism"></p></div>
+  <div class="card good"><h3>它其实也是你的长处</h3><p id="strength"></p></div>
+  <div class="card hl"><h3>今天就能做的一步</h3><p id="action"></p></div>
+  <div class="card"><h3>今天选一件做（不用三件都做）</h3><ul id="today"></ul></div>
+  <div class="card"><h3>这周试试</h3><ul id="week"></ul></div>
+  <div class="card"><h3>先别做这几件事</h3><ul id="avoid"></ul></div>
+
+  <div class="card"><h3>接下来 7 天</h3><ul id="practice"></ul></div>
+  <div class="card"><h3>别再对自己说</h3><p class="quote" id="stopword"></p><p id="reply"></p></div>
+
+  <div id="second-block" class="hide">
+    <div class="secondary" id="rsecond"></div>
+    <div class="card"><h3>你的副型 · 它会怎么叠加</h3><p id="secondDetail"></p></div>
+  </div>
+
+  <div class="card good hide" id="helpCard"><h3>这种情况下，去找专业帮助</h3><p id="helpText"></p></div>
+
+  <div class="disclaimer">
+    这是一份自我觉察工具，不是诊断，不能替代专业帮助。<br>
+    如果持续两周以上影响睡眠、食欲或工作，请去看医生或心理咨询师。
+  </div>
+
+  <div class="row">
+    <button class="btn ghost" onclick="restart()">再测一次</button>
+    <button class="btn" onclick="share()">保存结果卡</button>
+  </div>
+</div>
+
+<script>
+var LIK = ['完全不像我','不太像','有一点像','比较像','非常像我'];
+
+var BASE = [["A","开个头就推翻重来，因为觉得做得不够好。"],["B","要做的决定有几个选项，我会一直比较，最后哪个都没选。"],["C","坐到桌前就想躺，打开电脑又关掉。"],["D","一想到那封没回的消息，我就先去刷手机。"],["A","比起做得慢，我更怕做出来不像样。"],["B","选完之后我还在想，另一个会不会更好。"],["C","明明没干什么大事，一天下来累得说不出话。"],["D","事情本身不难，难的是要面对那个人。"],["A","交出去之前我要改到自己也挑不出毛病。"],["B","一件事有几种做法，我就停在比较里动不了。"],["C","我要拖到晚上才有一点力气，但那时候已经太晚。"],["D","有些电话和对话，我会拖很久才敢开口。"],["A","别人说「做得不错」，我心里想的是「那只是没做差」。"],["B","一件五分钟能定的事，我会拖成三天。"],["C","我靠咖啡和熬夜硬撑，第二天更没电。"],["D","拖到最后一刻，我靠慌乱逼自己动起来。"],["A","没把握做好的事，我宁愿晚一点开始。"],["B","我常把「再想想」当成不决定的理由。"],["C","我知道该做，但身体像被按住一样。"],["D","让我不舒服的事，我会绕开，哪怕它很重要。"],["A","我很难接受自己交出一个「还行」的版本。"],["B","选项一多，我就容易干脆不做决定。"],["C","休息一整天，也补不回来那种累。"],["D","我会等到不得不面对，才去处理那件事。"]];
+
+var TYPES = {"A":{"name":"及格线太高","sub":"不是不想做，是怕做不好。","scenes":["开个头就推翻重写，一直在准备阶段","因为怕做得不够好，干脆不开始","交出去之前要改到自己也挑不出毛病","别人夸做得不错，你心里想「那只是没做差」"],"mechanism":"你把「开始」和「做到最好」绑在了一起。只要还不动手，就还留着「我认真做会很好」的可能；一旦开始，这个可能就没了。拖延在保护你的自我评价，代价是你什么也没做出来。","strength":"你对自己的标准高，做出来的东西质量通常高于平均。这种标准在大多数人身上是没有的。","action":"给自己设一个「及格版」：只要求完成，不要求好。先写出来，改的时候也允许它还是次的。","practice":["每件事先做一个「能交的烂版本」，再改","定一个具体的「够好」标准，比如：能看懂、不错字","交出去之前只允许改一轮"],"stop":"我还没准备好。","reply":"你不是没准备好，你是在等一个不会出现的确定感。先交一个差的，比一直不交强。","second":"和「决策瘫痪」叠在一起时最难动：既怕做不好，又要先想清楚怎么做。这时候唯一有效的动作是——先做一个烂的，边做边改。","today":["给自己定一个「及格版」标准，写在纸上贴在桌前","挑一件拖了很久的事，只做 15 分钟的烂版本","今天允许自己交出一份不完美的东西"],"week":["每件事先产出「能交的烂版本」，再改","交出去之前只允许改一轮","每天记录一次：我改的是内容，还是在磨形式"],"avoid":["别在开始前先想完美方案","别把「还没准备好」当成理由"],"levelAdvice":{"light":"你这个程度更像习惯，不是性格。挑下面一件做就够，别为它额外焦虑。","mid":"它已经在实际影响你的产出和别人对你的评价了。这个阶段最好改——再拖下去，拖的就不只是事。","heavy":"到这个程度，通常不只是「方法」问题，睡眠、情绪、精力可能在一起拖后腿。先把作息和身体稳住，别指望靠自律硬扛。"},"helpText":"如果这种状态已经持续两周以上，影响到上班、上课或者基本生活（吃不下、睡不着、起不来），就不是「调整方法」能解决的了。去看医生或心理咨询师，不丢人。"},"B":{"name":"选项太多","sub":"卡在选哪一个，选完还想另一个会不会更好。","scenes":["打开一堆资料，最后一条都没定","选完还在反复比较，怕选错","一件事有几种做法，就一直停在比较里","宁可拖着，也不想做一个可能错的决定"],"mechanism":"你把「选择」当成了「可能出错的地方」。想用更长的思考换更小的后悔，但思考没有终点——信息永远不够。多想的每一分钟，都在加重「选错就完了」这个假设。","strength":"你考虑周全，不太会冲动做错事。在需要谨慎的决定上，这是别人花钱买不到的能力。","action":"给选择设上限：只看三个选项，20 分钟内定，定完不再看。","practice":["决定前写「我要满足的三个条件」，满足了就选","给自己设一个决定截止时间，到点就选第一顺位","练习一次「选了就不回头」：定完把其它选项关掉"],"stop":"我再想想。","reply":"想不出更好的，只会想出更多的顾虑。够用就选，选完再修。","second":"和「完美主义」叠在一起时，会变成「要选到最好的那一个」，于是永远选不出来。这时候标准要主动降到「够用」。","today":["写下一个正卡着你的决定，以及「我要满足的三个条件」","只看三个选项，20 分钟内定下来","定完把其它选项的页面关掉"],"week":["每天练一次「够用就选」","给每个决定设一个截止时间","一周后回看：那几个选择实际造成了多大差别"],"avoid":["别在选项之间来回切换超过两轮","别把「再想想」当理由"],"levelAdvice":{"light":"你这个程度更像习惯，不是性格。挑下面一件做就够，别为它额外焦虑。","mid":"它已经在实际影响你的产出和别人对你的评价了。这个阶段最好改——再拖下去，拖的就不只是事。","heavy":"到这个程度，通常不只是「方法」问题，睡眠、情绪、精力可能在一起拖后腿。先把作息和身体稳住，别指望靠自律硬扛。"},"helpText":"如果这种状态已经持续两周以上，影响到上班、上课或者基本生活（吃不下、睡不着、起不来），就不是「调整方法」能解决的了。去看医生或心理咨询师，不丢人。"},"C":{"name":"真的没电","sub":"不是不想动，是真的抬不起来。","scenes":["坐下就想躺，打开电脑又关掉","没什么大事，一天下来累得说不出话","拖到晚上才有一点力气，但已经太晚","靠咖啡和熬夜硬撑，第二天更没电"],"mechanism":"这不是意志力问题，是电量问题。你把「没电」当成了「懒」，于是用自责去催自己——自责本身又很耗电，于是形成负循环：越骂自己越没电，越没电越骂。","strength":"你对身体的信号很敏感，知道自己什么时候在硬撑。很多人到彻底崩掉才知道。","action":"今天先做一件 5 分钟的事，做完就停。不是完成任务，是把「启动」这个动作练一次。","practice":["每天挑一件 5 分钟能做完的事，做完立刻停","把大事拆到「小得不可能失败」，比如只打开文件","记录三天：几点最有电，把难的事挪到那个时段"],"stop":"我怎么这么废。","reply":"你不是废，是电量低。手机剩 5% 的时候也会卡，你不会骂它废。","second":"和「情绪逃避」叠在一起时最难，因为两件事同时在场：没电，还不想面对。先处理电量——睡、吃、动，再谈任务。","today":["挑一件 5 分钟能做完的事，做完立刻停","今天不喝第二杯咖啡","把最难的那件事挪到你最有电的时段"],"week":["每天一件 5 分钟任务，只练启动","连续记三天：几点最有电","睡前一小时不碰屏幕"],"avoid":["别用「我怎么这么废」催自己","别靠熬夜补白天的进度"],"levelAdvice":{"light":"你这个程度更像习惯，不是性格。挑下面一件做就够，别为它额外焦虑。","mid":"它已经在实际影响你的产出和别人对你的评价了。这个阶段最好改——再拖下去，拖的就不只是事。","heavy":"到这个程度，通常不只是「方法」问题，睡眠、情绪、精力可能在一起拖后腿。先把作息和身体稳住，别指望靠自律硬扛。"},"helpText":"如果这种状态已经持续两周以上，影响到上班、上课或者基本生活（吃不下、睡不着、起不来），就不是「调整方法」能解决的了。去看医生或心理咨询师，不丢人。"},"D":{"name":"不想面对","sub":"不碰它不是因为难，是因为想起来就不舒服。","scenes":["一想到那封邮件、那个电话，就先去刷手机","明知道要问，但一直没开口","事情本身不难，就是不想面对那个人","拖到最后一刻，靠慌乱逼自己动"],"mechanism":"回避是止痛。碰它立刻难受，绕开立刻舒服，大脑记住了这条捷径。代价是那件事一直在原地，而且每拖一天，它在想象里就更沉一点。","strength":"你懂得保护自己，知道什么让你不舒服。这种敏感让你不容易被消耗到崩。","action":"把那件事拆成「只做 2 分钟」的第一步：只打开文件、只写第一句、只发一条消息。","practice":["每天挑一件回避的事，做 2 分钟就停","把那件事写成动词短句（发、问、打开），不写结果","回避的时候记一笔：我在躲什么？躲完舒服了多久？"],"stop":"我就是懒。","reply":"你不是懒。懒是不想做，回避是不敢做——差别在于，回避的事你其实很在意。","second":"和「完美主义」叠在一起时，会变成「做不好就不做」。这时候要允许自己做得难看——难看地做完，比漂亮地不做强。","today":["挑一件一直绕开的事，只做 2 分钟","把那件事写成动词短句（发、问、打开）","做完记一笔：躲完舒服了多久"],"week":["每天做一件「2 分钟启动」","给回避的事排一个「最小版」，小到不可能失败","找一个人告诉你：你已经开始了"],"avoid":["别用「等心情好一点」当理由","别在开始前先把整件事想一遍"],"levelAdvice":{"light":"你这个程度更像习惯，不是性格。挑下面一件做就够，别为它额外焦虑。","mid":"它已经在实际影响你的产出和别人对你的评价了。这个阶段最好改——再拖下去，拖的就不只是事。","heavy":"到这个程度，通常不只是「方法」问题，睡眠、情绪、精力可能在一起拖后腿。先把作息和身体稳住，别指望靠自律硬扛。"},"helpText":"如果这种状态已经持续两周以上，影响到上班、上课或者基本生活（吃不下、睡不着、起不来），就不是「调整方法」能解决的了。去看医生或心理咨询师，不丢人。"}};
+
+function lvKey(v){ return v <= 9 ? 'light' : (v <= 15 ? 'mid' : 'heavy'); }
+var ITEMS = [], idx = 0, answers = [], lastResult = null;
+function $(id){ return document.getElementById(id); }
+function show(id){ ['cover','quiz','result'].forEach(function(x){ $(x).classList.toggle('hide', x !== id); }); }
+
+function shuffle(a){
+  var arr = a.slice();
+  for (var i = arr.length - 1; i > 0; i--){
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+  }
+  return arr;
+}
+
+function start(){
+  ITEMS = shuffle(BASE);
+  idx = 0;
+  answers = new Array(ITEMS.length);
+  for (var i = 0; i < answers.length; i++) answers[i] = null;
+  show('quiz'); render();
+}
+function restart(){ show('cover'); }
+
+function render(){
+  var text = ITEMS[idx][1];
+  $('prog').style.width = (idx / ITEMS.length * 100) + '%';
+  $('qno').textContent = '第 ' + (idx + 1) + ' / ' + ITEMS.length + ' 题';
+  $('qtext').textContent = text;
+  var box = $('opts'); box.innerHTML = '';
+  LIK.forEach(function(label, val){
+    var b = document.createElement('button');
+    b.className = 'opt';
+    b.innerHTML = '<b>' + label + '</b>';
+    if (answers[idx] === val){ b.style.background = '#ffd60a'; b.style.borderColor = '#14161a'; }
+    b.onclick = function(){ pick(val); };
+    box.appendChild(b);
+  });
+  $('back').style.visibility = idx === 0 ? 'hidden' : 'visible';
+}
+
+function pick(val){
+  answers[idx] = val;
+  if (idx < ITEMS.length - 1){ idx++; render(); } else finish();
+}
+function prev(){ if (idx > 0){ idx--; render(); } }
+
+var LEVELS = [[0,7,'偏轻'],[8,13,'中等'],[14,20,'偏重']];
+
+function finish(){
+  var score = {A:0,B:0,C:0,D:0};
+  ITEMS.forEach(function(item, i){ score[item[0]] += answers[i]; });
+  var ranked = ['A','B','C','D'].map(function(k){ return {k:k, v:score[k]}; })
+                              .sort(function(a,b){ return b.v - a.v; });
+  var main = ranked[0].k, second = ranked[1].k;
+  var gap = ranked[0].v - ranked[1].v;
+  var t = TYPES[main];
+  var lv = '中等';
+  for (var i = 0; i < LEVELS.length; i++){
+    if (ranked[0].v >= LEVELS[i][0] && ranked[0].v <= LEVELS[i][1]) lv = LEVELS[i][2];
+  }
+
+  $('rname').textContent = t.name;
+  $('rsub').textContent = t.sub;
+  var MAXP = 24;
+  $('rlevel').textContent = '拖延强度' + lv + '（' + ranked[0].v + ' / ' + MAXP + '）';
+
+  // 四维分布：让结果看起来是「你的」，不是模板
+  var dimNames = {"A":"完美主义","B":"决策瘫痪","C":"能量不足","D":"情绪逃避"};
+  var dimsHTML = ['A','B','C','D'].map(function(k){
+    var pct = Math.round(score[k] / MAXP * 100);
+    return '<div class="dim' + (k === main ? ' top1' : '') + '">' +
+             '<div class="top"><div>' + dimNames[k] + ' · ' + TYPES[k].name + '</div>' +
+             '<span>' + score[k] + ' / ' + MAXP + '</span></div>' +
+             '<div class="track"><div class="fill" style="width:' + pct + '%"></div></div>' +
+           '</div>';
+  }).join('');
+  $('dims').innerHTML = dimsHTML;
+
+  $('scenes').innerHTML = t.scenes.map(function(s){ return '<li>' + s + '</li>'; }).join('');
+  $('mechanism').textContent = t.mechanism;
+  $('strength').textContent = t.strength;
+  $('action').textContent = t.action;
+  $('practice').innerHTML = t.practice.map(function(s){ return '<li>' + s + '</li>'; }).join('');
+  $('stopword').textContent = '「' + t.stop + '」';
+  $('reply').textContent = t.reply;
+
+  $('levelAdvice').textContent = (t.levelAdvice || {})[lvKey(ranked[0].v)] || '';
+  $('today').innerHTML = (t.today || []).map(function(s){ return '<li>' + s + '</li>'; }).join('');
+  $('week').innerHTML = (t.week || []).map(function(s){ return '<li>' + s + '</li>'; }).join('');
+  $('avoid').innerHTML = (t.avoid || []).map(function(s){ return '<li>' + s + '</li>'; }).join('');
+
+  var needHelp = ranked[0].v >= 18;
+  $('helpCard').classList.toggle('hide', !needHelp);
+  if (needHelp){
+    $('helpText').textContent = t.helpText || '如果这些状态已经持续两周以上，影响到睡眠、食欲或正常上班，就不是"调整心态"能解决的了——去看医生或心理咨询师，这不丢人，也不用等到撑不住才去。';
+  }
+
+  var showSecond = gap <= 3;
+  $('second-block').classList.toggle('hide', !showSecond);
+  if (showSecond){
+    $('rsecond').textContent = '副型是「' + TYPES[second].name + '」——' + TYPES[second].sub;
+    $('secondDetail').textContent = t.second + '（两型只差 ' + gap + ' 分，说明它们在你身上是同时在跑的。）';
+  }
+
+  lastResult = {main:main, second:second, gap:gap, score:score, level:lv, showSecond:showSecond};
+  show('result');
+  window.scrollTo(0, 0);
+}
+
+function share(){
+  if (!lastResult) return;
+  var t = TYPES[lastResult.main];
+  var W = 1080, H = 1920;
+  var c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  var g = c.getContext('2d');
+  g.fillStyle = '#f7f3e8'; g.fillRect(0, 0, W, H);
+
+  g.fillStyle = '#8a8780'; g.font = '28px sans-serif';
+  g.fillText('内耗类型测试 · 我的结果', 80, 110);
+
+  g.fillStyle = '#14161a'; g.font = 'bold 92px sans-serif';
+  g.fillText(t.name, 80, 230);
+  var nw = g.measureText(t.name).width;
+  g.fillStyle = '#ffd60a'; g.fillRect(80, 252, nw, 18);
+
+  g.fillStyle = '#4a4740'; g.font = '34px sans-serif';
+  var y = wrap(g, t.sub, 80, 330, W - 160, 50);
+
+  g.fillStyle = '#8a8780'; g.font = '26px sans-serif';
+  g.fillText('__INTENSITY_LABEL__' + lastResult.level, 80, y + 16);
+
+  /* 雷达图 */
+  var cx = 540, cy = 700, R = 170;
+  var keys = ['A','B','C','D'];
+  var labels = ["完美主义","决策瘫痪","能量不足","情绪逃避"];
+  var ang = [-Math.PI/2, 0, Math.PI/2, Math.PI];
+  function pt(i, r){ return [cx + Math.cos(ang[i]) * r, cy + Math.sin(ang[i]) * r]; }
+
+  g.strokeStyle = '#e6e0d0'; g.lineWidth = 2;
+  [0.5, 1].forEach(function(k){
+    g.beginPath();
+    for (var i = 0; i < 4; i++){
+      var p = pt(i, R * k);
+      if (i === 0) g.moveTo(p[0], p[1]); else g.lineTo(p[0], p[1]);
+    }
+    g.closePath(); g.stroke();
+  });
+  g.strokeStyle = '#e6e0d0';
+  for (var i = 0; i < 4; i++){
+    var e = pt(i, R);
+    g.beginPath(); g.moveTo(cx, cy); g.lineTo(e[0], e[1]); g.stroke();
+  }
+
+  g.beginPath();
+  keys.forEach(function(k, i){
+    var p = pt(i, R * (lastResult.score[k] / 24));
+    if (i === 0) g.moveTo(p[0], p[1]); else g.lineTo(p[0], p[1]);
+  });
+  g.closePath();
+  g.fillStyle = 'rgba(20,22,26,0.85)'; g.fill();
+  g.strokeStyle = '#14161a'; g.lineWidth = 3; g.stroke();
+
+  g.font = 'bold 30px sans-serif'; g.fillStyle = '#14161a';
+  keys.forEach(function(k, i){
+    var p = pt(i, R + 46);
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(labels[i], p[0], p[1]);
+  });
+  g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+
+  /* 场景 */
+  g.fillStyle = '#14161a'; g.font = 'bold 38px sans-serif';
+  g.fillText('听起来像不像你', 80, 990);
+  g.fillStyle = '#4a4740'; g.font = '30px sans-serif';
+  y = 1050;
+  t.scenes.slice(0, 4).forEach(function(s){ y = wrap(g, '· ' + s, 80, y, W - 160, 46) + 10; });
+
+  /* 动作 */
+  g.fillStyle = '#ffd60a'; g.fillRect(70, y + 40, W - 140, 190);
+  g.fillStyle = '#6b5b00'; g.font = 'bold 28px sans-serif';
+  g.fillText('今天就能做的一步', 100, y + 90);
+  g.fillStyle = '#14161a'; g.font = '30px sans-serif';
+  wrap(g, t.action, 100, y + 140, W - 200, 46);
+
+  g.fillStyle = '#8a8780'; g.font = '24px sans-serif';
+  g.fillText('自我觉察工具，不是诊断', 80, H - 60);
+
+  var a = document.createElement('a');
+  a.download = '内耗类型报告-' + t.name + '.png';
+  a.href = c.toDataURL('image/png');
+  a.click();
+}
+
+function wrap(g, text, x, y, maxW, lh){
+  var line = '';
+  for (var i = 0; i < text.length; i++){
+    var ch = text[i];
+    if (g.measureText(line + ch).width > maxW){ g.fillText(line, x, y); y += lh; line = ch; }
+    else line += ch;
+  }
+  if (line){ g.fillText(line, x, y); y += lh; }
+  return y;
+}
+</script>
+</body>
+</html>
